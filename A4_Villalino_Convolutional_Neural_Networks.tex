@@ -1,0 +1,1575 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm, headheight=15pt]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{mdframed}
+\usepackage{titlesec}
+\usepackage{listings}
+\usepackage{tcolorbox}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{parskip}
+\usepackage{setspace}
+\usepackage{float}
+\usepackage{placeins}
+
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage[scaled=1]{helvet}
+\usepackage[helvet]{sfmath}
+
+\tcbuselibrary{skins, breakable, listings}
+
+\definecolor{headerblue}{RGB}{0, 56, 101}
+\definecolor{sectionblue}{RGB}{30, 90, 160}
+\definecolor{lightblue}{RGB}{220, 235, 252}
+\definecolor{codebg}{RGB}{245, 247, 250}
+\definecolor{codeframe}{RGB}{180, 200, 230}
+\definecolor{answerbg}{RGB}{255, 253, 230}
+\definecolor{answerframe}{RGB}{200, 180, 80}
+\definecolor{notebg}{RGB}{240, 248, 240}
+\definecolor{noteframe}{RGB}{100, 170, 100}
+\definecolor{warningbg}{RGB}{255, 243, 220}
+\definecolor{warningframe}{RGB}{220, 150, 50}
+\definecolor{instrbg}{RGB}{245, 247, 250}
+\definecolor{instrframe}{RGB}{140, 160, 190}
+\definecolor{darkgray}{RGB}{60, 60, 60}
+
+\definecolor{myColorA}{RGB}{3, 28, 46}%rightfootline
+\definecolor{myColorB}{RGB}{13, 74, 119}%{5,0,70}%centerfootline
+\definecolor{myColorC}{RGB}{255, 151, 24}%{0,0,100}%leftfootline
+
+\titleformat{\section}
+  {\large\bfseries\color{headerblue}}
+  {\thesection.}{0.5em}{}
+  [\color{sectionblue}\hrule height 0.8pt]
+
+\titleformat{\subsection}
+  {\normalsize\bfseries\color{sectionblue}}
+  {\thesubsection}{0.5em}{}
+
+\setlength{\parskip}{6pt}
+
+\lstdefinestyle{pythonstyle}{
+  language=Python,
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\small,
+  keywordstyle=\bfseries\color{sectionblue},
+  commentstyle=\itshape\color{gray},
+  stringstyle=\color{orange!70!black},
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=5pt,
+  aboveskip=8pt,
+  belowskip=4pt,
+  xleftmargin=8pt,
+  xrightmargin=4pt,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  numbersep=8pt,
+}
+
+\newtcolorbox{answerbox}[1][]{
+  colback=answerbg, colframe=myColorC,
+  title={\textbf{Answer space}},
+  fonttitle=\small\bfseries,
+  coltitle=black,
+  breakable, #1
+}
+
+\newtcolorbox{notebox}[1][]{
+  colback=notebg, colframe=noteframe,
+  left=6pt, right=6pt, top=4pt, bottom=4pt,
+  breakable, #1
+}
+
+\newtcolorbox{warningbox}[1][]{
+  colback=warningbg, colframe=warningframe,
+  left=6pt, right=6pt, top=4pt, bottom=4pt,
+  breakable, #1
+}
+
+\newtcolorbox{instructionbox}{
+  colback=lightblue, colframe=myColorB,
+  left=8pt, right=8pt, top=6pt, bottom=6pt,
+  breakable
+}
+
+\newtcolorbox{stepbox}[1][]{
+  colback=instrbg, colframe=myColorA,
+  title={\textbf{Instructions}},
+  fonttitle=\small\bfseries,
+  coltitle=white,
+  breakable, #1
+}
+
+\newcommand{\answerline}{\vspace{0.9cm}\noindent\hrulefill\par}
+\newcommand{\shortanswerlines}[1]{%
+  \foreach \i in {1,...,#1}{\answerline}%
+}
+
+\graphicspath{{figures/}}
+\newcommand{\figwide}[3]{\begin{figure}[htbp]\centering
+\includegraphics[width=\textwidth]{#1}\caption{#2}\label{#3}\end{figure}}
+\newcommand{\figpair}[4]{\begin{figure}[htbp]\centering
+\includegraphics[width=0.62\textwidth]{#1}\hfill\includegraphics[width=0.33\textwidth]{#2}
+\caption{#3}\label{#4}\end{figure}}
+
+\begin{document}
+
+\begin{center}
+  {\LARGE\bfseries\color{headerblue}
+    Coding Assignment 4\\[4pt]
+    Convolutional Neural Networks}\\[10pt]
+\end{center}
+
+\section*{Overview}
+
+This activity walks you through building, training, and evaluating convolutional neural network (CNN) architectures for multi-class medical image
+classification using the \textbf{Brain Tumor MRI Dataset}. Beyond architecture
+comparison, you will run six controlled experiments isolating the effects of
+\textbf{loss function}, \textbf{optimizer}, \textbf{kernel size}, \textbf{stride},
+\textbf{padding}, and \textbf{pooling strategy} on feature extraction and
+classification performance. You will also produce, for \emph{every diagnostic class} in the
+dataset, a worked demonstration of (a) the data augmentations applied to a
+representative image and (b) a hand-verified convolution calculation showing
+the input patch/image, kernel, receptive field, and resulting feature map.
+
+\begin{instructionbox}
+\textbf{Dataset:} Brain Tumor Magnetic Resonance Imaging\\
+\textbf{Source:} \href{https://huggingface.co/datasets/alfa-bravo/Brain-Tumor-Mri-Dataset/blob/main/Brain\%20Tumor.rar}{Brain Tumor MRI Dataset (Hugging Face)}\\
+\textbf{Classes:} 4
+\textbf{Task:} Multi-class image classification, not binary (tumor/no-tumor).
+\end{instructionbox}
+
+\begin{warningbox}
+\textbf{\textcolor{red}{Warning:}} Complete all coding tasks in your own Jupyter notebook,
+following the instructions given in each part of this sheet. Answer the written
+questions \emph{in this sheet} based on your own observations and course concepts.
+\textbf{Do not copy code outputs verbatim as answers}, and \textbf{do not fabricate or
+estimate experimental results} --- every number in your tables and every figure you
+reference must come from a run you actually performed. Explain using your own words
+and equations.
+\end{warningbox}
+
+\textbf{General instructions:}
+\begin{itemize}[leftmargin=*]
+  \item Implement all experiments in \textbf{Python} using \textbf{PyTorch}.
+  \item Use \textbf{Google Colab (GPU runtime)} or a local machine with a CUDA-capable
+        GPU where available. If you have no GPU access, reduce image resolution, batch
+        size, and epoch count, and state the adjustment explicitly in your report.
+  \item Organize your source code into reusable modules (Section~15). Do not write
+        one monolithic script.
+  \item Keep a fixed random seed (\texttt{SEED = 42}) for every experiment unless a
+        question specifically asks you to vary it.
+\end{itemize}
+
+\section*{Learning Objectives}
+
+By the end of this activity, you should be able to:
+\begin{enumerate}[leftmargin=*, label=\arabic*.]
+  \item Implement and compare CNN architectures for a multiclass medical image classification task.
+  \item Design clinically-justified data augmentation strategies for MRI images and
+        visually verify them on a representative sample from \emph{every} diagnostic class.
+  \item Perform manual convolution calculations for a representative image of \emph{every}
+        class and verify the computation against PyTorch.
+  \item Compare multi-class loss functions appropriate for this task and
+        relate their gradients to observed training behavior.
+  \item Compare gradient-based optimizers appropriate for image classification and relate their
+        update rules to observed convergence speed and generalization.
+  \item Quantify how convolutional kernel size, stride, and padding affect output
+        dimensions, receptive field, parameter count, and classification accuracy.
+  \item Distinguish max pooling, average pooling, and global average pooling in terms
+        of information retained, gradient flow, and generalization.
+  \item Connect every experimental observation to the architectural or mathematical
+        principle that explains it, supported only by results you actually obtained.
+  \item Produce a reproducible, modular PyTorch codebase and a technical report
+        documenting methodology, results, and interpretation.
+\end{enumerate}
+
+\section{Environment Setup and Data Exploration}
+
+\subsection{Package Imports}
+
+Copy and run the following cell at the top of your notebook. If any import fails,
+install the missing package with \texttt{pip install <package>} before proceeding.
+
+\begin{lstlisting}[style=pythonstyle]
+import os, random, math, time
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from PIL import Image
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.utils.data import Dataset, DataLoader, random_split
+import torchvision
+from torchvision import transforms
+from torchvision.datasets import ImageFolder
+from sklearn.metrics import confusion_matrix, classification_report
+
+SEED = 42
+random.seed(SEED); np.random.seed(SEED); torch.manual_seed(SEED)
+
+DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print('Torch version :', torch.__version__)
+print('Device        :', DEVICE)
+\end{lstlisting}
+
+\subsection{Download and Extract the Dataset}
+
+The dataset is distributed as a single \texttt{.rar} archive on Hugging Face.
+
+\begin{stepbox}
+\begin{enumerate}[leftmargin=*, label=\arabic*.]
+  \item Download \texttt{Brain Tumor.rar} from the dataset page linked in the
+        Overview box above.
+  \item Install an unrar backend (e.g.\ \texttt{pip install patool} together with
+        the system \texttt{unrar}/\texttt{unar} utility, or \texttt{pip install rarfile}).
+  \item Extract the archive into a local folder. Confirm that the extracted directory
+        contains \textbf{four} subfolders, one per class: \texttt{glioma},
+        \texttt{meningioma}, \texttt{pituitary}, \texttt{notumor} (folder names may
+        vary slightly --- print them to confirm).
+  \item Build a file list by walking the extracted directory, recording each image's
+        file path and its class label taken from its parent folder name.
+  \item Load the dataset with \texttt{torchvision.datasets.ImageFolder} (or a custom
+        \texttt{Dataset} subclass) pointed at the extracted directory, and print the
+        resulting \texttt{class\_to\_idx} mapping.
+\end{enumerate}
+\end{stepbox}
+
+\begin{lstlisting}[style=pythonstyle]
+import patoolib
+patoolib.extract_archive('Brain Tumor.rar', outdir='brain_tumor_mri')
+
+DATA_ROOT = 'brain_tumor_mri'   # update to the folder that contains the 4 class subfolders
+full_dataset = ImageFolder(DATA_ROOT)
+print('Classes found:', full_dataset.classes)
+print('Class -> index map:', full_dataset.class_to_idx)
+\end{lstlisting}
+
+\subsection{Dataset Exploration}
+
+\begin{stepbox}
+\begin{enumerate}[leftmargin=*, label=\arabic*.]
+  \item Count the number of images in each of the 4 class folders and display the
+        counts as a table and as a bar chart.
+  \item Display one representative image from each class in a single $1 \times 4$
+        figure, with the class name as the subplot title. \textbf{Keep the index of
+        each chosen representative image} --- you will reuse the \emph{same}
+        representative image in Sections~3 and 4.
+  \item Print the pixel dimensions and color mode (grayscale vs.\ RGB) of a handful
+        of raw images from different classes.
+\end{enumerate}
+\end{stepbox}
+
+\begin{tcolorbox}[colback=lightblue!40, colframe=myColorB, title={\textbf{Reflection Question 1}}, fonttitle=\small\bfseries, breakable]
+From your class-count bar chart, is the dataset balanced across the four classes?
+Report the exact counts you obtained. If the dataset is imbalanced, name
+\textbf{two} concrete techniques (applicable later in training) that could
+compensate for it.
+\end{tcolorbox}
+
+\begin{answerbox}
+The dataset is not perfectly balanced: Glioma has 4,167 images (31.58\%),
+Pituitary Tumor 3,232 (24.49\%), No Tumor 2,850 (21.60\%), and Meningioma
+2,947 (22.33\%). Two ways to reduce majority-class bias are inverse-frequency
+class weights in the loss and a class-balanced sampler or oversampling of the
+less frequent classes. This notebook tested weighted cross-entropy and focal
+loss with inverse-frequency weights.
+\end{answerbox}
+
+\begin{tcolorbox}[colback=lightblue!40, colframe=myColorB, title={\textbf{Reflection Question 2}}, fonttitle=\small\bfseries, breakable]
+MRI images in this dataset may come from different scanners and therefore differ in
+resolution and intensity range. Identify \textbf{two} preprocessing steps (besides
+resizing) that address this, and explain, for each, what would go wrong if it were
+skipped.
+\end{tcolorbox}
+
+\begin{answerbox}
+First, convert every image to one grayscale channel. The raw sample included
+grayscale PNGs and RGB JPEGs, so skipping this step would produce inconsistent
+input channels and color representations. Second, scale pixel values to
+$[0,1]$ and normalize with the training-split mean and standard deviation
+($0.1726$ and $0.1837$). Without normalization, differences in scanner intensity
+and image brightness can dominate the learned features; computing the statistics
+from all splits would also leak information from validation and test data.
+\end{answerbox}
+
+\figwide{fig_class_counts.png}{Number of images per class (Reflection Question 1).}{fig:counts}
+\figwide{fig_original_images.png}{One representative image per class, reused in Sections 3 and 4.}{fig:orig}
+\FloatBarrier
+
+\section{Data Preparation}
+
+\begin{stepbox}
+\begin{enumerate}[leftmargin=*, label=\arabic*.]
+  \item Resize every image to a fixed size (e.g.\ $128 \times 128$ or $224 \times 224$,
+        depending on your compute budget) and convert to a single channel (grayscale)
+        or replicate to 3 channels if a pretrained architecture requires it.
+  \item Split the dataset into \textbf{train / validation / test} using a
+        \textbf{70\% / 15\% / 15\%} \emph{stratified} split (stratify by class label so
+        the class proportions from Reflection Question~1 are preserved in every split).
+        Fix \texttt{SEED = 42}.
+  \item Compute the per-channel mean and standard deviation \textbf{from the training
+        split only}, and use them to normalize all three splits.
+  \item Wrap each split in a \texttt{DataLoader} with a consistent batch size
+        (state your chosen value and justify it given your compute budget).
+  \item Print the number of images and the class distribution in each of the three
+        splits to confirm the stratified split worked as intended.
+\end{enumerate}
+\end{stepbox}
+
+\begin{tcolorbox}[colback=lightblue!40, colframe=myColorB, title={\textbf{2.1 --- Questions}}, fonttitle=\small\bfseries, breakable]
+\textbf{(a)} Why must normalization statistics be computed from the training split
+only, and not the full dataset? \\[6pt]
+\textbf{(b)} Why is a \emph{stratified} split preferable to a plain random split for
+this dataset, given your answer to Reflection Question~1? \\[6pt]
+\textbf{(c)} Holding the same splits, preprocessing, and random seed across every
+architecture and every experiment in this assignment is essential. Explain the
+controlled-experiment principle behind this requirement.
+\end{tcolorbox}
+
+\begin{answerbox}
+\textbf{(a)} Using validation or test images to estimate normalization statistics
+would leak information from those held-out sets into training and make evaluation
+less independent. Training-only statistics let the validation and test sets act
+as unseen data.\par
+\textbf{(b)} Stratification keeps the class proportions similar across the
+train, validation, and test splits. This matters because the class counts differ;
+a plain random split could leave a smaller class under-represented in one split.\par
+\textbf{(c)} Keeping the split, preprocessing, seed, and other settings fixed
+controls confounding variables. The measured difference can then be attributed
+more plausibly to the one factor being changed in each experiment.
+\par
+The run used grayscale $128\times128$ images, batch size 32, a 30-epoch maximum,
+and patience 6. The split totals were 9,237 training, 1,979 validation, and 1,980
+test images. Per-class train/validation/test counts were Glioma 2,917/625/625,
+Meningioma 2,063/442/442, Pituitary Tumor 2,262/485/485, and No Tumor
+1,995/427/428.
+\end{answerbox}
+
+\section{Data Augmentation --- Required for Every Class}
+
+\begin{stepbox}
+\begin{enumerate}[leftmargin=*, label=\arabic*.]
+  \item Define a \texttt{torchvision.transforms} (or \texttt{albumentations}) pipeline
+        containing \emph{clinically plausible} augmentations only:
+        horizontal flip, small-angle rotation ($\pm 10$--$15^{\circ}$), brightness/contrast
+        jitter, slight zoom or random-resized crop, and mild Gaussian noise.
+  \item \textbf{Do not} use vertical flips or large elastic/shear distortions: these
+        can produce anatomically implausible brain shapes that no longer correspond to
+        a real MRI scan.
+  \item For \textbf{each} of the four classes (Glioma, Meningioma, Pituitary Tumor,
+        No Tumor), take the \emph{same} representative image you selected in
+        Section~1.3 and apply your augmentation pipeline \textbf{independently four
+        times}, producing four distinct augmented versions.
+  \item For each class, assemble a single figure with 5 panels: the original image
+        followed by its 4 augmented versions, each panel titled with the exact
+        transformation(s) and parameter value(s) applied (e.g.\ \texttt{rotate
+        +12\textdegree{}}, \texttt{brightness $\times$0.85}).
+  \item Save the four class figures as \texttt{fig\_augmentation\_glioma.png},
+        \texttt{fig\_augmentation\_meningioma.png}, \texttt{fig\_augmentation\_pituitary.png},
+        and \texttt{fig\_augmentation\_notumor.png}.
+\end{enumerate}
+\end{stepbox}
+
+\begin{notebox}
+\textbf{Required output:} four figures total --- one per class --- each showing
+1 original image plus 4 augmented versions with their transformation labels. This is
+not optional and is graded as its own rubric line (see the Grading Rubric).
+\end{notebox}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\small\noindent\emph{Augmentation entries are ordered as flip (N/Y), rotation in degrees, zoom, brightness, contrast, and noise standard deviation.}
+\begin{tabularx}{\textwidth}{|l|X|X|}
+\hline
+\textbf{Class} & \textbf{Representative image \newline (file/index)} & \textbf{Augmentations applied \newline (with parameters)} \\
+\hline
+Glioma & \texttt{00913.jpg / 912} & \footnotesize\texttt{1 N/-11.4/0.96/0.89/1.09/0.020; 2 N/-11.2/0.92/0.89/1.04/0.017; 3 Y/+2.1/1.06/0.80/1.12/0.021; 4 Y/-6.8/1.05/0.84/0.95/0.011} \\
+\hline
+Meningioma & \texttt{00103.png / 4269} & \footnotesize\texttt{1 Y/+4.7/0.93/0.99/1.07/0.024; 2 N/+2.6/1.00/1.03/1.05/0.028; 3 Y/-10.6/0.92/0.85/0.86/0.005; 4 Y/-2.7/1.10/0.91/0.87/0.002} \\
+\hline
+Pituitary Tumor & \texttt{03038.png / 13001} & \footnotesize\texttt{1 Y/+1.0/1.07/0.87/0.89/0.001; 2 N/-9.6/1.05/1.08/0.92/0.019; 3 N/+4.1/0.97/0.94/0.91/0.005; 4 N/-5.5/0.96/1.18/1.13/0.009} \\
+\hline
+No Tumor & \texttt{01127.jpg / 8240} & \footnotesize\texttt{1 Y/-0.3/0.92/0.94/0.83/0.000; 2 N/+11.0/1.07/1.06/1.16/0.002; 3 N/+5.7/0.94/1.14/1.09/0.002; 4 Y/-10.6/0.91/0.93/0.94/0.022} \\
+\hline
+\end{tabularx}
+\end{center}
+
+\figwide{fig_augmentation_glioma.png}{Glioma: original image and four augmented versions.}{fig:aug1}
+\figwide{fig_augmentation_meningioma.png}{Meningioma: original image and four augmented versions.}{fig:aug2}
+\figwide{fig_augmentation_pituitary.png}{Pituitary Tumor: original image and four augmented versions.}{fig:aug3}
+\figwide{fig_augmentation_notumor.png}{No Tumor: original image and four augmented versions.}{fig:aug4}
+\FloatBarrier
+
+\begin{tcolorbox}[colback=lightblue!40, colframe=myColorB, title={\textbf{3.1 --- Question}}, fonttitle=\small\bfseries, breakable]
+Augmentation choices that are safe for natural-image datasets (e.g.\ ImageNet) are not
+automatically safe for medical imaging. For \textbf{each} augmentation you used
+(horizontal flip, rotation, brightness/contrast, zoom, noise), state one reason it is
+anatomically or diagnostically acceptable for brain MRI, and explain why a vertical
+flip would \emph{not} be acceptable.
+\end{tcolorbox}
+
+\begin{answerbox}
+Each augmentation copies a real variation. \textbf{Horizontal flip:} the brain is roughly left-right
+symmetric and tumors can appear on either side, so a mirrored scan still looks like a real brain with the
+same tumor type. \textbf{Rotation} ($\pm12^\circ$): the head is never placed in the scanner at exactly the
+same angle. \textbf{Brightness/contrast:} different scanners and settings give different brightness.
+\textbf{Zoom} (0.9--1.1): head size and field of view differ between patients, so this changes scale, not anatomy.
+\textbf{Mild noise:} real MRI always has some noise.\par
+\textbf{Vertical flip:} it turns the brain upside down. Real scans always have the same up-down orientation,
+and position matters for diagnosis (for example, pituitary tumors sit at the base of the brain), so a vertical
+flip would teach the model a wrong picture of the anatomy.
+\end{answerbox}
+
+\section{Convolution Mathematics --- Required for Every Class}
+
+\begin{stepbox}
+\begin{enumerate}[leftmargin=*, label=\arabic*.]
+  \item For \textbf{each} of the four classes, take the \emph{same} representative
+        image used in Sections~1.3 and~3, convert it to grayscale, and crop a small
+        patch (recommended size $6 \times 6$ or $8 \times 8$ pixels) from a region that
+        contains visible tumor tissue (or, for the No Tumor class, a representative
+        region of healthy brain tissue). Record the pixel values of this patch.
+  \item Define a single $3 \times 3$ kernel to apply to every class's patch, e.g.\ the
+        vertical edge-detection kernel
+        $K = \begin{bmatrix}-1 & 0 & 1\\ -1 & 0 & 1\\ -1 & 0 & 1\end{bmatrix}$.
+  \item With \textbf{stride 1} and \textbf{no padding} (valid padding), manually
+        compute, by hand, the output feature map values for every valid position of
+        the kernel over the patch. Show the element-wise multiply-and-sum at each
+        position.
+  \item Reproduce the identical operation in PyTorch using \texttt{F.conv2d} on the
+        same patch (as a \texttt{(1,1,H,W)} tensor) and the same kernel (as a
+        \texttt{(1,1,3,3)} tensor with \texttt{bias=None}). Confirm that your manual
+        values match the PyTorch output to within floating-point tolerance.
+  \item Verify the output spatial dimensions using
+        $\text{Output} = \left\lfloor \dfrac{\text{Input} + 2P - K}{S} \right\rfloor + 1$.
+  \item Compute the receptive field of a single unit in the output of this one
+        convolutional layer (equal to the kernel size here). Then compute the
+        \emph{compounded} receptive field if this layer were followed by a second,
+        identical $3\times3$, stride-1 convolution, using
+        $\text{RF}_l = \text{RF}_{l-1} + (k_l - 1)\prod_{i<l} s_i$.
+\end{enumerate}
+\end{stepbox}
+
+\begin{notebox}
+\textbf{Required output:} for \textbf{each} of the four classes, one figure or
+side-by-side panel showing (a) the source image with the chosen patch region
+highlighted, (b) the raw patch pixel values and the kernel values, (c) your manual
+feature-map calculation next to the PyTorch-computed feature map, and (d) the
+receptive-field calculation for 1 and 2 stacked layers. Four complete sets are
+required (Glioma, Meningioma, Pituitary Tumor, No Tumor).
+\end{notebox}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\footnotesize
+\begin{tabularx}{\textwidth}{|l|X|c|c|c|c|c|c|}
+\hline
+\textbf{Class} & \textbf{Patch} & \textbf{Kernel} & \textbf{Stride} & \textbf{Pad} &
+\textbf{Output} & \textbf{RF (1L)} & \textbf{RF (2L)} \\
+\hline
+Glioma & $6\times6$ at $(64,54)$ & $3\times3$ & 1 & 0 & $4\times4$ & $3\times3$ & $5\times5$ \\
+\hline
+Meningioma & $6\times6$ at $(90,38)$ & $3\times3$ & 1 & 0 & $4\times4$ & $3\times3$ & $5\times5$ \\
+\hline
+Pituitary Tumor & $6\times6$ at $(52,52)$ & $3\times3$ & 1 & 0 & $4\times4$ & $3\times3$ & $5\times5$ \\
+\hline
+No Tumor & $6\times6$ at $(61,61)$ & $3\times3$ & 1 & 0 & $4\times4$ & $3\times3$ & $5\times5$ \\
+\hline
+\end{tabularx}
+\normalsize
+\end{center}
+
+\figwide{fig_convolution_glioma.png}{Glioma: patch, kernel, manual feature map, PyTorch feature map, and receptive field.}{fig:conv1}
+\figwide{fig_convolution_meningioma.png}{Meningioma: patch, kernel, manual feature map, PyTorch feature map, and receptive field.}{fig:conv2}
+\figwide{fig_convolution_pituitary.png}{Pituitary Tumor: patch, kernel, manual feature map, PyTorch feature map, and receptive field.}{fig:conv3}
+\figwide{fig_convolution_notumor.png}{No Tumor: patch, kernel, manual feature map, PyTorch feature map, and receptive field.}{fig:conv4}
+\FloatBarrier
+
+\begin{tcolorbox}[colback=lightblue!40, colframe=myColorB, title={\textbf{4.1 --- Question}}, fonttitle=\small\bfseries, breakable]
+\textbf{(a)} Why must your manual calculation and the PyTorch \texttt{F.conv2d} output
+match exactly (within floating-point tolerance)? What would a mismatch most likely
+indicate about kernel orientation (true mathematical convolution, which flips the
+kernel, versus the cross-correlation that deep learning frameworks actually compute)?\\[6pt]
+\textbf{(b)} Compare the receptive field after 1 layer versus after 2 stacked
+$3\times3$ layers. Is this consistent with the general principle that two stacked
+$3\times3$ convolutions can approximate the receptive field of one $5\times5$
+convolution? Show the arithmetic.
+\end{tcolorbox}
+
+\begin{answerbox}
+\textbf{(a)} \texttt{F.conv2d} does the same arithmetic as the manual loops: slide the kernel, multiply the
+matching numbers, and add them up. The same operation on the same numbers must agree up to floating-point
+rounding, and all four classes matched exactly (maximum absolute difference $0$). Deep learning libraries
+actually compute cross-correlation (the kernel is not flipped), while true mathematical convolution flips the
+kernel by $180^\circ$. For the Glioma patch, the flipped-kernel result was exactly the negative of PyTorch's
+result (for example $-20$ became $20$), because this kernel flipped by $180^\circ$ is just $-K$. So a manual
+result that matches PyTorch except that every sign is opposite most likely means the kernel orientation
+was flipped.\par
+\textbf{(b)} A $3\times3$ layer has receptive field $3$. Two stride-1 layers give
+$3+(3-1)\cdot1=5$, the same as one $5\times5$ layer. The two-layer stack also uses fewer weights and has an
+extra non-linearity between the layers.
+\end{answerbox}
+
+\section{Implementation and Comparison (Experiment 1)}
+
+Implement and experimentally evaluate the following six architectures, all trained
+and evaluated on the \emph{same} splits, preprocessing, and evaluation metrics from
+Section~2.
+
+\begin{itemize}[leftmargin=*]
+  \item LeNet-5
+  \item AlexNet
+  \item A VGG-style CNN (any variant)
+  \item A GoogLeNet / Inception-inspired CNN
+  \item ResNet (any depth version)
+  \item A lightweight EfficientNet variant
+\end{itemize}
+
+\begin{stepbox}
+For \textbf{every} architecture:
+\begin{enumerate}[leftmargin=*, label=\arabic*.]
+  \item Implement the network in PyTorch, adapting the first convolutional layer's
+        input channels to match your chosen grayscale/RGB preprocessing from Section~2.
+  \item Print the complete model summary; identify which layers are convolutional,
+        pooling, activation, normalization, and fully connected.
+  \item Report the total number of trainable parameters.
+  \item Print the output tensor shape after each major block.
+  \item In one short paragraph, explain the architecture's distinguishing
+        characteristic (e.g.\ inception modules, residual connections, depthwise
+        separable convolutions, compound scaling).
+  \item Train and evaluate with a single fixed optimizer (e.g.\ Adam), the same
+        learning rate, batch size, epoch budget, and random seed used for every other
+        architecture in this section. The optimizer itself is varied separately in
+        Section~7.
+  \item Record training time, validation performance, and test performance.
+  \item If you use a pretrained backbone for any architecture, explicitly state
+        whether you are doing feature extraction (frozen backbone) or fine-tuning
+        (unfrozen backbone), and justify the choice.
+\end{enumerate}
+\end{stepbox}
+
+\textbf{Required outputs:} training-vs-validation accuracy plot, training-vs-validation
+loss plot, confusion matrix, and classification report for each architecture, plus the
+consolidated comparison table below.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\footnotesize\setlength{\tabcolsep}{3pt}
+\begin{tabularx}{\textwidth}{|l|c|c|c|c|c|X|}
+\hline
+\textbf{Architecture} & \textbf{Train Acc} & \textbf{Val Acc} & \textbf{Test Acc} &
+\textbf{\#Params} & \textbf{Train Time} & \textbf{Notes}\newline \tiny{(efficiency / generalization)} \\
+\hline
+LeNet-5 & 0.7418 & 0.7271 & 0.7374 & 1,627,916 & 215.4 s & Early stopped after 22 epochs; smallest accuracy of the six. \\
+\hline
+AlexNet & 0.8494 & 0.8262 & 0.8338 & 5,869,380 & 332.3 s & Completed 30 epochs; largest parameter count. \\
+\hline
+VGG & 0.8566 & 0.8317 & 0.8348 & 2,833,892 & 446.7 s & Early stopped after 26 epochs. \\
+\hline
+GoogLeNet & 0.8503 & 0.8343 & 0.8328 & 165,476 & 311.9 s & Early stopped after 23 epochs; fewest parameters. \\
+\hline
+ResNet & 0.8618 & 0.8322 & 0.8359 & 2,796,772 & 294.5 s & Early stopped after 21 epochs. \\
+\hline
+EfficientNet & 0.8638 & 0.8373 & 0.8369 & 606,276 & 504.0 s & Best test accuracy; completed 30 epochs. \\
+\hline
+\end{tabularx}
+\end{center}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}\footnotesize
+\begin{tabular}{|l|cc|cc|cc|cc|c|}
+\hline
+ & \multicolumn{2}{c|}{\textbf{Glioma}} & \multicolumn{2}{c|}{\textbf{Meningioma}} & \multicolumn{2}{c|}{\textbf{Pituitary}} & \multicolumn{2}{c|}{\textbf{No Tumor}} & \\
+\textbf{Architecture} & P & R & P & R & P & R & P & R & \textbf{Macro F1} \\ \hline
+LeNet-5 & 0.63 & 0.76 & 0.54 & 0.35 & 0.83 & 0.93 & 0.94 & 0.89 & 0.73 \\ \hline
+AlexNet & 0.77 & 0.71 & 0.68 & 0.72 & 0.92 & 0.95 & 0.98 & 1.00 & 0.84 \\ \hline
+VGG & 0.76 & 0.76 & 0.69 & 0.68 & 0.93 & 0.93 & 0.98 & 0.99 & 0.84 \\ \hline
+GoogLeNet & 0.77 & 0.73 & 0.67 & 0.71 & 0.92 & 0.94 & 0.99 & 1.00 & 0.84 \\ \hline
+ResNet & 0.75 & 0.75 & 0.71 & 0.69 & 0.92 & 0.94 & 0.98 & 1.00 & 0.84 \\ \hline
+EfficientNet & 0.77 & 0.73 & 0.69 & 0.72 & 0.92 & 0.94 & 0.99 & 1.00 & 0.84 \\ \hline
+\end{tabular}
+
+\smallskip\small Test-set classification report summary (P = precision, R = recall), CE loss with Adam.
+\end{center}
+
+\figwide{fig_architecture_comparison.png}{Architecture comparison: test accuracy, parameters, and training time.}{fig:arch}
+\figpair{fig_curves_LeNet-5.png}{fig_confusion_LeNet-5.png}{LeNet-5: training vs.\ validation curves and test confusion matrix.}{fig:lenet}
+\figpair{fig_curves_AlexNet.png}{fig_confusion_AlexNet.png}{AlexNet: training vs.\ validation curves and test confusion matrix.}{fig:alexnet}
+\figpair{fig_curves_VGG.png}{fig_confusion_VGG.png}{VGG: training vs.\ validation curves and test confusion matrix.}{fig:vgg}
+\figpair{fig_curves_GoogLeNet.png}{fig_confusion_GoogLeNet.png}{GoogLeNet: training vs.\ validation curves and test confusion matrix.}{fig:googlenet}
+\figpair{fig_curves_ResNet.png}{fig_confusion_ResNet.png}{ResNet: training vs.\ validation curves and test confusion matrix.}{fig:resnet}
+\figpair{fig_curves_EfficientNet.png}{fig_confusion_EfficientNet.png}{EfficientNet: training vs.\ validation curves and test confusion matrix.}{fig:effnet}
+\FloatBarrier
+
+\begin{tcolorbox}[colback=lightblue!40, colframe=myColorB, title={\textbf{5.1 --- Question}}, fonttitle=\small\bfseries, breakable]
+Which architecture achieved the best test accuracy, and which was the most
+computationally efficient (shortest training time or smallest parameter count)?
+Were they the same architecture? Relate the differences you observed to specific
+structural features (depth, residual connections, inception modules, global average
+pooling, parameter sharing).
+\end{tcolorbox}
+
+\begin{answerbox}
+\textbf{Best test accuracy:} EfficientNet ($0.8369$). But the top five are almost tied (AlexNet $0.8338$, VGG
+$0.8348$, GoogLeNet $0.8328$, ResNet $0.8359$, EfficientNet $0.8369$): they are only $0.41$ points apart, which
+is smaller than the noise of a 1,980-image test set (about $0.8$ points), so EfficientNet is not clearly better.
+LeNet-5 was clearly lowest ($0.7374$).\par
+\textbf{Most efficient:} GoogLeNet had the fewest parameters ($165{,}476$) and LeNet-5 had the shortest training
+time ($215.4$ s, although it also stopped early at epoch 22). So they are not the same architecture, and
+LeNet-5 is fast but weaker.\par
+\textbf{Structure:} LeNet-5 has only 2 conv layers (fast but too simple), and about 1.61M of its 1.63M parameters
+sit in the first fully connected layer. AlexNet is the biggest (5.87M, about 3.4M in two FC layers) but not better.
+VGG stacks $3\times3$ convolutions and was one of the slowest ($446.7$ s). GoogLeNet uses $1\times1$ reductions
+and global average pooling (its classifier has only 900 weights), which keeps it at 165k parameters. ResNet's
+skip connections make a deeper network easy to train ($0.8359$ in $294.5$ s). EfficientNet reached the top
+accuracy with $606{,}276$ parameters (about a tenth of AlexNet) using depthwise convolutions and
+squeeze-and-excitation, but it trained the longest ($504.0$ s), probably because it has many small layers
+(51 conv layers) and ran all 30 epochs.
+\end{answerbox}
+
+\section{Loss Function Comparison (Experiment 2)}
+
+For \textbf{every} architecture from Section~5, repeat training using each of the
+following loss functions, holding the dataset splits, preprocessing, optimizer,
+learning rate, batch size, epochs, and seed constant:
+
+\begin{enumerate}[leftmargin=*, label=\arabic*.]
+  \item Cross-Entropy Loss.
+  \item Cross-Entropy Loss with Label Smoothing (e.g.\ $\varepsilon = 0.1$).
+  \item Focal Loss, implemented with the correct $(1-p_t)^{\gamma}$ modulating factor
+        on the log-probability (state your chosen $\gamma$ and, given the class
+        imbalance from Reflection Question~1, your chosen per-class $\alpha$ weights).
+  \item Class-Weighted Cross-Entropy Loss, with per-class weights set inversely
+        proportional to class frequency (state the exact weight you computed for each
+        of the four classes using the counts from Reflection Question~1).
+\end{enumerate}
+
+\begin{notebox}
+All four losses above are genuinely suited to this multi-class classification task.
+Mean Squared Error on softmax probabilities is deliberately \textbf{excluded} from this
+required comparison: its gradient saturates and shrinks when a prediction is
+confidently wrong, which makes it a poor fit for a classification objective. If your
+instructor wants that failure mode demonstrated directly, treat an MSE run as an
+optional extension rather than part of the required comparison.
+\end{notebox}
+
+\begin{stepbox}
+For each (architecture, loss) pair, record: convergence speed, training/validation
+accuracy, per-class precision/recall (particularly for the minority classes), the
+predicted-probability confidence distribution, and whether over/underfitting occurred.
+\end{stepbox}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Architecture} & \textbf{Cross-Entropy} & \textbf{Label Smoothing} & \textbf{Focal Loss} & \textbf{Weighted CE} \\
+\hline
+LeNet-5 & 0.7374 & 0.7343 & 0.7242 & 0.7409 \\
+\hline
+AlexNet & 0.8338 & 0.8369 & 0.7455 & 0.8217 \\
+\hline
+VGG & 0.8348 & 0.8389 & 0.8177 & 0.8364 \\
+\hline
+GoogLeNet & 0.8328 & 0.8359 & 0.8222 & 0.8157 \\
+\hline
+ResNet & 0.8359 & 0.8222 & 0.8283 & 0.8364 \\
+\hline
+EfficientNet & 0.8369 & 0.8323 & 0.8288 & 0.8288 \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}\footnotesize
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Epochs to best val.\ acc.} & \textbf{CE} & \textbf{LS} & \textbf{Focal} & \textbf{WCE} \\ \hline
+LeNet-5 & 17 & 13 & 14 & 12 \\ \hline
+AlexNet & 28 & 30 & 13 & 26 \\ \hline
+VGG & 20 & 28 & 23 & 21 \\ \hline
+GoogLeNet & 19 & 17 & 13 & 7 \\ \hline
+ResNet & 21 & 7 & 16 & 13 \\ \hline
+EfficientNet & 30 & 13 & 30 & 21 \\ \hline
+\end{tabular}
+\end{center}
+\begin{center}
+\renewcommand{\arraystretch}{1.2}\footnotesize
+\begin{tabular}{|l|cc|cc|cc|cc|}
+\hline
+\textbf{ResNet, loss} & \multicolumn{2}{c|}{\textbf{Glioma} (P / R)} & \multicolumn{2}{c|}{\textbf{Meningioma} (P / R)} & \multicolumn{2}{c|}{\textbf{Pituitary} (P / R)} & \multicolumn{2}{c|}{\textbf{No Tumor} (P / R)} \\ \hline
+Cross-Entropy & 0.752 & 0.749 & 0.706 & 0.686 & 0.923 & 0.942 & 0.984 & 0.998 \\ \hline
+Label Smoothing & 0.736 & 0.754 & 0.684 & 0.613 & 0.900 & 0.946 & 0.984 & 0.998 \\ \hline
+Focal Loss & 0.736 & 0.752 & 0.684 & 0.665 & 0.930 & 0.926 & 0.998 & 0.998 \\ \hline
+Weighted CE & 0.753 & 0.752 & 0.692 & 0.681 & 0.928 & 0.951 & 1.000 & 0.991 \\ \hline
+\end{tabular}
+\end{center}
+\figwide{fig_loss_comparison.png}{Loss-function comparison: test accuracy for each architecture.}{fig:loss}
+\figwide{fig_loss_confidence_resnet.png}{ResNet: predicted-probability confidence distribution for each loss function.}{fig:conf}
+\FloatBarrier
+
+\begin{tcolorbox}[colback=lightblue!40, colframe=myColorB, title={\textbf{6.1 --- Question}}, fonttitle=\small\bfseries, breakable]
+\textbf{(a)} Write the gradient of cross-entropy loss with respect to the logits and
+compare it, conceptually, to the gradient of focal loss. How does focal loss's
+modulating term change the relative weight given to easy versus hard (frequently
+misclassified) examples? \\[6pt]
+\textbf{(b)} Given that Glioma is the most frequent class in this dataset, explain
+whether label smoothing, focal loss, or class-weighted cross-entropy would be the most
+principled choice for reducing the model's bias toward the majority class, and support
+your answer with your results.
+\end{tcolorbox}
+
+\begin{answerbox}
+\textbf{(a)} For softmax probabilities $p_j$ and true class $y$, cross-entropy has
+$\partial L_{CE}/\partial z_j=p_j-\mathbf{1}[j=y]$. For focal loss, the gradient is the same direction multiplied
+by $\alpha_y(1-p_y)^{\gamma-1}\big[(1-p_y)-\gamma p_y\ln p_y\big]$. With $\gamma=2$ (ignoring $\alpha_y$), an
+easy example with $p_y=0.9$ gets a factor of only about $0.03$, while a hard example with $p_y=0.2$ gets about
+$1.16$. So focal loss almost ignores easy examples and puts the learning pressure on hard,
+often-misclassified ones. The weights used were $\gamma=2$ and $\alpha=w=N/(4n_c)$: Glioma $0.7917$,
+Meningioma $1.1194$, Pituitary $1.0209$, No Tumor $1.1575$.\par
+\textbf{(b)} Class-weighted CE is the most principled choice for the imbalance because it directly gives the
+smaller classes a bigger weight. Label smoothing is not meant for imbalance, and focal loss targets hard
+examples, not rare classes. But the results showed no clear benefit. Weighted CE was slightly better than CE for
+LeNet-5 ($0.7409$ vs.\ $0.7374$), VGG ($0.8364$ vs.\ $0.8348$) and ResNet ($0.8364$ vs.\ $0.8359$), and worse for
+AlexNet, GoogLeNet and EfficientNet. Label smoothing was higher than CE for AlexNet, VGG and GoogLeNet. For
+ResNet, Meningioma recall was $0.686$ with CE, $0.681$ with weighted CE, $0.665$ with focal loss and $0.613$ with
+label smoothing, and Glioma recall stayed near $0.75$ ($0.749$ to $0.754$). Focal loss gave lower accuracy than CE
+for all six architectures. So in these runs no loss clearly reduced the bias toward Glioma, possibly because the
+imbalance is mild ($1.46:1$) and Meningioma and Glioma are simply the hardest classes.
+\end{answerbox}
+
+\section{Optimizer Comparison (Experiment 3)}
+
+For \textbf{every} architecture from Section~5, repeat training using each of the
+following optimizers, holding the dataset splits, preprocessing, loss function
+(Cross-Entropy Loss), batch size, epoch budget, and seed constant. Vary \textbf{only}
+the optimizer (and its own required hyperparameters) between runs.
+
+\begin{enumerate}[leftmargin=*, label=\arabic*.]
+  \item \textbf{SGD}, momentum 0.9, Nesterov momentum enabled, learning rate 0.01.
+  \item \textbf{RMSprop}, learning rate 0.001.
+  \item \textbf{Adam}, learning rate 0.001.
+  \item \textbf{AdamW}, learning rate 0.001, weight decay 0.01.
+  \item \textbf{Nadam}, learning rate 0.001.
+\end{enumerate}
+
+\begin{notebox}
+As mentioned in our discussion, \texttt{keras} supports at least 13 optimizers. However, these five optimizers were selected as the ones genuinely suited to CNN image
+classification at this dataset and model scale. Optimizers built for very-large-batch
+training (Lamb), extreme memory-constrained large models (Adafactor), matrix
+orthogonalization in large transformer-style training (Muon), or large-scale sparse
+linear models (Ftrl) are \textbf{excluded} here as they offer no demonstrated advantage,
+and in some cases a documented disadvantage, for a CNN of this size on this dataset.
+Treat any of them as an optional extension, not part of the required comparison.
+\end{notebox}
+
+\begin{stepbox}
+For each (architecture, optimizer) pair, record: epochs to best validation accuracy
+(convergence speed), final training/validation/test accuracy, total training time,
+and whether the run diverged, oscillated, or plateaued early. Use a consistent
+early-stopping rule (monitor validation loss, a fixed patience) across all runs so that
+no optimizer is penalized or favored purely by a fixed epoch budget.
+\end{stepbox}
+
+\textbf{Required outputs:} one comparative training-loss-curve figure overlaying all
+five optimizers for at least one architecture, plus the consolidated comparison table
+below, \textbf{fully populated for every architecture $\times$ optimizer pair}
+(6 architectures $\times$ 5 optimizers = 30 result cells).
+
+\begin{center}
+\renewcommand{\arraystretch}{1.15}
+\footnotesize
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\textbf{Architecture} & \textbf{SGD (Nesterov)} & \textbf{RMSprop} & \textbf{Adam} & \textbf{AdamW} & \textbf{Nadam} \\
+\hline
+LeNet-5      & 0.7879 & 0.7510 & 0.7374 & 0.7389 & 0.7394 \\
+\hline
+AlexNet      & 0.8318 & 0.7960 & 0.8338 & 0.8338 & 0.8399 \\
+\hline
+VGG          & 0.8424 & 0.8313 & 0.8348 & 0.8414 & 0.8369 \\
+\hline
+GoogLeNet    & 0.8399 & 0.8318 & 0.8328 & 0.8273 & 0.8354 \\
+\hline
+ResNet       & 0.8232 & 0.8399 & 0.8359 & 0.8182 & 0.8399 \\
+\hline
+EfficientNet & 0.8242 & 0.8308 & 0.8369 & 0.8313 & 0.8283 \\
+\hline
+\end{tabular}
+\normalsize
+\end{center}
+
+\begin{notebox}
+\textbf{Reporting convention:} record \emph{test accuracy} in the table above. In your
+notebook and report, also tabulate (or log to CSV) the epochs-to-convergence and
+training time for every cell, since the discussion questions below require both.
+\end{notebox}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}\footnotesize
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\textbf{Epochs to best val.\ acc.} & \textbf{SGD} & \textbf{RMSprop} & \textbf{Adam} & \textbf{AdamW} & \textbf{Nadam} \\ \hline
+LeNet-5 & 17 & 30 & 17 & 9 & 7 \\ \hline
+AlexNet & 23 & 18 & 28 & 28 & 30 \\ \hline
+VGG & 24 & 17 & 20 & 23 & 23 \\ \hline
+GoogLeNet & 23 & 18 & 19 & 13 & 17 \\ \hline
+ResNet & 18 & 15 & 21 & 13 & 18 \\ \hline
+EfficientNet & 19 & 18 & 30 & 30 & 19 \\ \hline
+\end{tabular}
+\end{center}
+\begin{center}
+\renewcommand{\arraystretch}{1.2}\footnotesize
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\textbf{Train time (s)} & \textbf{SGD} & \textbf{RMSprop} & \textbf{Adam} & \textbf{AdamW} & \textbf{Nadam} \\ \hline
+LeNet-5 & 224 & 296 & 215 & 147 & 131 \\ \hline
+AlexNet & 309 & 192 & 332 & 327 & 326 \\ \hline
+VGG & 495 & 380 & 447 & 416 & 2,797 \\ \hline
+GoogLeNet & 400 & 296 & 312 & 232 & 271 \\ \hline
+ResNet & 306 & 307 & 294 & 239 & 310 \\ \hline
+EfficientNet & 454 & 302 & 504 & 500 & 316 \\ \hline
+\end{tabular}
+\end{center}
+\begin{center}
+\renewcommand{\arraystretch}{1.2}\footnotesize
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\textbf{Train $-$ val acc.} & \textbf{SGD} & \textbf{RMSprop} & \textbf{Adam} & \textbf{AdamW} & \textbf{Nadam} \\ \hline
+LeNet-5 & 0.0177 & 0.0054 & 0.0232 & 0.0236 & 0.0190 \\ \hline
+AlexNet & 0.0303 & 0.0943 & 0.0161 & 0.0154 & 0.0188 \\ \hline
+VGG & 0.0256 & 0.1044 & 0.0485 & 0.0397 & 0.0158 \\ \hline
+GoogLeNet & 0.0335 & 0.1543 & 0.0138 & 0.0118 & 0.0250 \\ \hline
+ResNet & 0.0129 & 0.0436 & 0.0150 & 0.0177 & 0.0264 \\ \hline
+EfficientNet & 0.0100 & 0.0105 & 0.0159 & 0.0067 & 0.0066 \\ \hline
+\end{tabular}
+\end{center}
+\begin{notebox}
+The VGG + Nadam training time (2,797 s) is far above every other run (131 s to 504 s). It is most likely
+caused by the computer slowing down or sleeping during that run, so it is not used to compare optimizer speed.
+PyTorch's default RMSprop constants ($\alpha=0.99$, $\epsilon=10^{-8}$) differ from Keras
+($\rho=0.9$, $\epsilon=10^{-7}$).
+\end{notebox}
+
+\figwide{fig_optimizer_comparison.png}{Optimizer comparison: test accuracy for every architecture.}{fig:opt}
+\figwide{fig_optimizer_loss_curves.png}{Training-loss curves with all five optimizers overlaid, one panel per architecture.}{fig:optcurves}
+\FloatBarrier
+
+\begin{tcolorbox}[colback=lightblue!40, colframe=myColorB, title={\textbf{7.1 --- Question}}, fonttitle=\small\bfseries, breakable]
+\textbf{(a)} Across all six architectures, which optimizer most consistently achieved
+the highest test accuracy? Was any optimizer's ranking architecture-dependent (i.e.\
+it performed well for some architectures but poorly for others)? Cite specific rows
+from your table.\\[6pt]
+\textbf{(b)} SGD with Nesterov momentum typically needs more epochs to reach its best
+validation accuracy than the Adam-family optimizers, but can generalize at least as
+well on vision tasks once it converges. Did your results show this pattern? Support
+your answer with the epochs-to-convergence and test-accuracy values you logged.\\[6pt]
+\textbf{(c)} AdamW decouples weight decay from the gradient-based update, unlike Adam
+with L2 regularization folded directly into the gradient. For which architecture(s) in
+your table (if any) did this distinction appear to matter most? Explain why a deeper,
+more over-parameterized architecture (e.g.\ VGG or ResNet) would be more sensitive to
+this distinction than a shallow one (e.g.\ LeNet-5).
+\end{tcolorbox}
+
+\begin{answerbox}
+\textbf{(a)} No optimizer won across all six architectures. SGD led for LeNet-5 ($0.7879$), VGG ($0.8424$) and
+GoogLeNet ($0.8399$); Nadam led for AlexNet ($0.8399$); RMSprop and Nadam tied for ResNet ($0.8399$); Adam led
+for EfficientNet ($0.8369$). SGD won the most rows but was the lowest for EfficientNet ($0.8242$) and second
+lowest for ResNet ($0.8232$). RMSprop was tied-best for ResNet but lowest for AlexNet ($0.7960$). So the ranking
+depends on the architecture.\par
+\textbf{(b)} Only partly. Epochs to best validation accuracy, SGD vs.\ Adam: LeNet-5 17 vs.\ 17, AlexNet 23 vs.\ 28,
+VGG 24 vs.\ 20, GoogLeNet 23 vs.\ 19, ResNet 18 vs.\ 21, EfficientNet 19 vs.\ 30. SGD was slower only for VGG and
+GoogLeNet. For test accuracy, SGD was higher than Adam for LeNet-5 ($+0.0505$), VGG ($+0.0076$) and GoogLeNet
+($+0.0071$), and lower for AlexNet ($-0.0020$), ResNet ($-0.0127$) and EfficientNet ($-0.0127$). So the
+``slower but generalizes as well'' pattern did not show up consistently.\par
+\textbf{(c)} In this notebook ``Adam'' has no weight decay, while AdamW has decoupled weight decay $0.01$. AdamW
+differed most from Adam on ResNet ($0.8182$ vs.\ $0.8359$, down $0.0177$); VGG improved ($0.8348$ to $0.8414$);
+LeNet-5 barely moved ($0.7374$ vs.\ $0.7389$) and AlexNet did not change. In theory, deeper networks with many
+weights can overfit more, so weight decay should matter more for them than for shallow LeNet-5. The results fit
+this only loosely (AdamW helped VGG but hurt ResNet), so this is not a general rule from one seed.
+\end{answerbox}
+
+\section{Kernel Size Experiment (Experiment 4)}
+
+Using the best-performing architecture from Section~5 (or a small CNN built for this
+experiment), replace its first convolutional layer's kernel size with each of:
+$1\times1$, $3\times3$, $5\times5$, $7\times7$, keeping all other layers fixed.
+
+\begin{stepbox}
+\begin{enumerate}[leftmargin=*, label=\arabic*.]
+  \item For each kernel size, record the resulting output feature map dimensions,
+        receptive field, parameter count, training time, and test accuracy.
+  \item Visualize the first-layer feature maps produced by each kernel size on the
+        \emph{same} input image for at least one class.
+  \item Separately compare one $5\times5$ convolution against two consecutive
+        $3\times3$ convolutions: compute the effective receptive field and parameter
+        count for both, and explain the nonlinearity advantage of the stacked option.
+  \item Explain the role of $1\times1$ convolutions in channel transformation and
+        dimensionality reduction.
+\end{enumerate}
+\end{stepbox}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+\textbf{Kernel} & \textbf{Output dims} & \textbf{Receptive field} & \textbf{\#Params} & \textbf{Train time} & \textbf{Test Acc} \\
+\hline
+$1\times1$ & $128\times128$ & $1 / 20$ & 23,540 total & 249.6 s & 0.6980 \\
+\hline
+$3\times3$ & $128\times128$ & $3 / 22$ & 23,668 total & 162.1 s & 0.7096 \\
+\hline
+$5\times5$ & $128\times128$ & $5 / 24$ & 23,924 total & 239.2 s & 0.7298 \\
+\hline
+$7\times7$ & $128\times128$ & $7 / 26$ & 24,308 total & 213.8 s & 0.7328 \\
+\hline
+\end{tabular}
+\end{center}
+
+\figwide{fig_kernel_comparison.png}{Kernel-size comparison (1$\times$1, 3$\times$3, 5$\times$5, 7$\times$7).}{fig:kernel}
+\figwide{fig_kernel_feature_maps.png}{First-layer feature maps for each kernel size on the same Glioma image.}{fig:kernelmaps}
+\begin{center}
+\renewcommand{\arraystretch}{1.2}\footnotesize
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+\textbf{$C_{in}=C_{out}$} & \textbf{One 5$\times$5 params} & \textbf{RF} & \textbf{Two 3$\times$3 params} & \textbf{RF} & \textbf{Saved (\%)} & \textbf{Nonlinearities} \\ \hline
+16 & 6,400 & 5 & 4,608 & 5 & 28 & 1 / 2 \\ \hline
+64 & 102,400 & 5 & 73,728 & 5 & 28 & 1 / 2 \\ \hline
+256 & 1,638,400 & 5 & 1,179,648 & 5 & 28 & 1 / 2 \\ \hline
+\end{tabular}
+\end{center}
+\FloatBarrier
+
+\begin{tcolorbox}[colback=lightblue!40, colframe=myColorB, title={\textbf{8.4 --- Question}}, fonttitle=\small\bfseries, breakable]
+Based on your results, did larger kernels improve accuracy enough to justify their
+extra parameters and compute cost for this dataset? Use your table's numbers to
+support your answer.
+\end{tcolorbox}
+
+\begin{answerbox}
+Test accuracy rose from $0.6980$ ($1\times1$) to $0.7096$ ($3\times3$), $0.7298$ ($5\times5$) and $0.7328$
+($7\times7$). Total parameters only went from 23,540 to 24,308 ($+768$, about 3\%) because only the first layer
+changes. First-layer compute grows with $k^2$ ($7\times7$ is about $5.4$ times the $3\times3$ layer), but training
+time did not follow it (249.6, 162.1, 239.2, 213.8 s) because the runs stopped at different epochs (23, 15,
+22, 19); per epoch they all took about 11 s. The gain from $3\times3$ to $5\times5$ is $+0.0202$ but from
+$5\times5$ to $7\times7$ only $+0.0030$, so $5\times5$ looks like the best trade-off. This is one seed, so
+differences of about 1 point should not be over-trusted.
+\par\smallskip
+For equal input and output channel width $C$, one $5\times5$ convolution has $25C^2$ weights, while two
+$3\times3$ layers have $18C^2$, a 28\% reduction with the same $5\times5$ receptive field and an extra
+non-linearity. A $1\times1$ convolution mixes channels at each pixel without changing the spatial size, so it can
+change the channel count cheaply; for example, 1x1 (256 to 64) + 3x3 (64 to 64) + 1x1 (64 to 256) uses 69,632
+parameters, only 11.8\% of a direct $3\times3$ convolution from 256 to 256 channels (589,824).
+\end{answerbox}
+
+\section{Stride Experiment (Experiment 5)}
+
+Using the same base architecture as Section~8, fix the kernel size (use $3\times3$)
+and vary the stride of the first convolutional layer: $S=1$, $S=2$, $S=3$.
+
+\begin{stepbox}
+\begin{enumerate}[leftmargin=*, label=\arabic*.]
+  \item For each stride, verify the output dimensions using
+        $\text{Output} = \lfloor (\text{Input} + 2P - K)/S \rfloor + 1$.
+  \item Record the number of convolution operations performed, computational cost,
+        training time, and test accuracy for each stride.
+  \item Discuss how much spatial information is discarded as stride increases.
+  \item Investigate whether replacing a pooling layer with a larger-stride convolution
+        in the same position produces comparable downsampling and accuracy.
+\end{enumerate}
+\end{stepbox}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|c|c|c|c|p{6cm}|}
+\hline
+\textbf{Stride} & \textbf{Output dims} & \textbf{Train time} & \textbf{Test Acc} & \textbf{Notes} \\
+\hline
+1 & $128\times128$ & 162.1 s & 0.7096 & 40.11M conv MACs; 16,384 positions (100\%); 23,668 params. \\
+\hline
+2 & $64\times64$ & 283.0 s & 0.7631 & 10.03M conv MACs; 4,096 positions (25\%); 23,668 params. \\
+\hline
+3 & $43\times43$ & 127.1 s & 0.7500 & 4.14M conv MACs; 1,849 positions (11.3\%); 23,668 params. \\
+\hline
+\end{tabular}
+\end{center}
+
+\figwide{fig_stride_comparison.png}{Stride comparison: test accuracy, convolution MACs, and training time.}{fig:stride}
+\FloatBarrier
+
+\begin{tcolorbox}[colback=lightblue!40, colframe=myColorB, title={\textbf{9.2 --- Question}}, fonttitle=\small\bfseries, breakable]
+Does stride affect the number of trainable parameters in a convolutional layer?
+Explain why or why not, and distinguish this from stride's effect on computational
+cost.
+\end{tcolorbox}
+
+\begin{answerbox}
+Stride does not change a convolution's parameter count: the weights still have shape
+$C_{out}\times C_{in}\times k\times k$, and all three stride rows have 23,668 parameters. It does change how many
+positions the kernel visits, so the output size and compute change: the first conv output is $128\times128$
+(16,384 positions), $64\times64$ (4,096) and $43\times43$ (1,849), and the total conv MACs fell from 40.11M to
+10.03M to 4.14M.\par
+Stride 2 keeps only 25\% of the positions and stride 3 only 11.3\%, so fine details can be skipped. Still,
+accuracy did not drop: $0.7096$ (stride 1), $0.7631$ (stride 2) and $0.7500$ (stride 3), so for this small
+network the lost positions did not hurt (one seed, differences near the noise level).\par
+The strided-convolution downsampler gave the same sizes and reached $0.7520$ test accuracy versus $0.7096$ for
+max-pooling, so it matched or beat it, but it used 72,276 parameters and 68.42M MACs versus 23,668 parameters
+and 40.11M MACs.
+\end{answerbox}
+
+\section{Padding Experiment (Experiment 6)}
+
+Compare \textbf{valid padding} ($P=0$) against \textbf{same padding} (the padding
+value that keeps spatial dimensions unchanged for your chosen kernel/stride) across
+the first 3 convolutional layers of your base architecture.
+
+\begin{stepbox}
+\begin{enumerate}[leftmargin=*, label=\arabic*.]
+  \item Manually calculate, before running any code, the spatial dimensions after
+        each of the 3 layers (L1, L2, and L3) under valid padding, and separately under same padding.
+  \item Verify both sets of calculations using PyTorch.
+  \item Visualize the feature maps produced at each layer under both padding schemes,
+        noting information lost at the image boundary under valid padding.
+  \item Record classification performance under both configurations.
+  \item Explain why repeated valid-padding convolutions cause spatial resolution to
+        shrink rapidly across a deep network.
+\end{enumerate}
+\end{stepbox}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Padding} & \textbf{Dims after L1} & \textbf{Dims after L2} & \textbf{Dims after L3} & \textbf{Test Acc} \\
+\hline
+Valid ($P=0$) & 126 & 61 & 28 & 0.7177 \\
+\hline
+Same & 128 & 64 & 32 & 0.7096 \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{notebox}
+The sizes in the table are the convolution outputs. A max-pooling layer sits between the convolutions, so the full
+sequence is $126\to63\to61\to30\to28\to14$ for valid padding and $128\to64\to64\to32\to32\to16$ for same padding.
+\end{notebox}
+
+\figwide{fig_padding_feature_maps.png}{Feature maps at each convolution layer under valid and same padding.}{fig:padmaps}
+\figwide{fig_padding_comparison.png}{Padding comparison: dimensions and test accuracy.}{fig:pad}
+\FloatBarrier
+
+\begin{tcolorbox}[colback=lightblue!40, colframe=myColorB, title={\textbf{10.3 --- Question}}, fonttitle=\small\bfseries, breakable]
+Did valid padding measurably hurt performance for a network this shallow? At what
+depth (number of valid-padding layers) would the feature map shrink to a single
+pixel for your chosen input size and kernel size? Show the calculation.
+\end{tcolorbox}
+
+\begin{answerbox}
+Valid padding did not hurt: test accuracy was $0.7177$ versus $0.7096$ for same padding (validation $0.7064$
+vs.\ $0.7089$), a small difference from one seed. The network is shallow, so losing 2 pixels per convolution at
+the border costs little.\par
+With a $3\times3$, stride-1 valid convolution, $n_d=128-2d$. After $d=63$ layers the map is $2\times2$, and a
+64th $3\times3$ convolution does not fit, so this even input never reaches exactly $1\times1$ ($128-2d=1$ would
+need $d=63.5$; an odd input such as 127 would reach it at $d=63$). For $5\times5$ kernels, $n_d=128-4d$, so 31
+layers give $4\times4$.\par
+Valid convolutions shrink the map quickly because the kernel cannot be centered on border pixels, so each layer
+removes $k-1$ pixels from the height and from the width, and this adds up with depth (pooling shrinks it even
+more). Border pixels are also used by fewer kernel windows (a corner pixel is in one $3\times3$ window, a center
+pixel in nine), so information near the image edge is used less and then cut off. Same padding adds zeros so the
+border pixels still get used.
+\end{answerbox}
+
+\section{Pooling Experiment (Experiment 7)}
+
+Compare \textbf{MaxPool2D}, \textbf{AvgPool2D}, and \textbf{Global Average Pooling
+(GAP)} using $2\times2$ pooling with stride 2 as the primary configuration (and
+$3\times3$ pooling with stride 2 as a secondary comparison where dimensionally
+appropriate).
+
+\begin{stepbox}
+\begin{enumerate}[leftmargin=*, label=\arabic*.]
+  \item For at least one class's representative image, visualize the feature map
+        immediately before pooling and immediately after, for both max and average
+        pooling.
+  \item Record output dimensions, training behavior, classification accuracy, and
+        generalization performance for each pooling strategy.
+  \item Explain why max pooling preserves strong local activations while average
+        pooling produces smoother feature representations.
+  \item Explain why pooling layers have no trainable parameters, and how gradients
+        propagate differently through max pooling (routed only to the arg-max
+        location) versus average pooling (distributed equally).
+  \item Explain why Global Average Pooling is useful immediately before the final
+        classification layer in architectures such as ResNet and GoogLeNet.
+\end{enumerate}
+\end{stepbox}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|p{3cm}|p{3.3cm}|c|c|p{3.6cm}|}
+\hline
+\textbf{Pooling} & \textbf{Output dims} & \textbf{Train time} & \textbf{Test Acc} & \textbf{Notes} \\
+\hline
+MaxPool $2\times2$/2 & $64\times64$ after pool 1; 16,384 features & 320.2 s & 0.7838 & Train--val gap $+0.017$; completed 30 epochs. \\
+\hline
+AvgPool $2\times2$/2 & $64\times64$ after pool 1; 16,384 features & 318.5 s & 0.7975 & Train--val gap $+0.008$; completed 30 epochs. \\
+\hline
+Global Avg Pool & $64\times64$ after pool 1; 64 features after GAP & 162.1 s & 0.7096 & Train--val gap $-0.009$; early stopped. \\
+\hline
+MaxPool $3\times3$/2 (secondary) & $63\times63$ after pool 1; 14,400 features & 323.2 s & 0.8000 & Train--val gap $+0.013$; completed 30 epochs. \\
+\hline
+AvgPool $3\times3$/2 (secondary) & $63\times63$ after pool 1; 14,400 features & 216.7 s & 0.7813 & Train--val gap $+0.016$; early stopped. \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{notebox}
+The MaxPool and AvgPool rows use a flatten and fully connected classifier (1,072,308 parameters for $2\times2$ and
+945,332 for $3\times3$), while the Global Avg Pool row is the base network with a GAP classifier (23,668 parameters).
+The GAP row therefore differs from the other rows in classifier size as well as in pooling type.
+\end{notebox}
+
+\figwide{fig_pooling_feature_maps.png}{Feature map before and after max pooling and average pooling on the same trained feature map.}{fig:poolmaps}
+\figwide{fig_pooling_comparison.png}{Pooling comparison: test accuracy and training time.}{fig:pool}
+\FloatBarrier
+
+\begin{tcolorbox}[colback=lightblue!40, colframe=myColorB, title={\textbf{11.2 --- Question}}, fonttitle=\small\bfseries, breakable]
+In a medical imaging context, where a faint but diagnostically critical signal
+(e.g.\ a small tumor boundary) could be smoothed away, which pooling strategy would
+you expect to be safer, and did your results confirm this expectation?
+\end{tcolorbox}
+
+\begin{answerbox}
+Max pooling keeps the biggest value in each window, so a strong activation survives unchanged, while
+average pooling mixes it with weaker neighbors and gives a smoother result (in the demo, the window
+$1,3,4,2$ gives a max of $4$ but an average of $2.5$). So max pooling is the reasonable expectation for a faint
+localized signal. The results did not clearly confirm it: with $2\times2$ pooling, average ($0.7975$) beat max
+($0.7838$), but with $3\times3$ pooling, max ($0.8000$) beat average ($0.7813$). There was no consistent
+winner, and the gaps are near the noise level. Overall accuracy also cannot show whether faint tumor boundaries
+were kept.\par
+Pooling layers have no learned weights because they use a fixed rule. Max-pool sends the gradient only to the
+winning position, and average-pool splits it equally ($0.25$ for each position of a $2\times2$ window). Global
+average pooling turns each channel into one number, so the classifier is much smaller and overfits less. The GAP
+row ($0.7096$) had lower accuracy than the flatten + FC rows, but it also changes the classifier size, so the
+two effects cannot be separated.
+\end{answerbox}
+
+\section{Combined Hyperparameter Experiments (Experiment 8)}
+
+After completing Sections~8--11 individually, evaluate the following six combined
+configurations on your base architecture.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+\textbf{Config} & \textbf{Kernel} & \textbf{Stride} & \textbf{Padding} & \textbf{Pooling} & \textbf{Test Acc} \\
+\hline
+A & $3\times3$ & 1 & Same & Max & 0.7096 \\
+\hline
+B & $3\times3$ & 1 & Same & Average & 0.7444 \\
+\hline
+C & $5\times5$ & 1 & Valid & Max & 0.7455 \\
+\hline
+D & $5\times5$ & 2 & Same & Average & 0.7429 \\
+\hline
+E & $7\times7$ & 1 & Valid & Max & 0.7566 \\
+\hline
+F & $3\times3$ & 2 & Same & None & 0.7283 \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{|c|c|c|c|c|c|c|p{3.9cm}|}
+\hline
+\textbf{Config} & \textbf{Final map} & \textbf{RF} & \textbf{Params} & \textbf{Conv MACs} & \textbf{Train time} & \textbf{Test Acc} & \textbf{Dims per layer} \\ \hline
+A & $16\times16$ & 22 & 23,668 & 40.11M & 162.1 s & 0.7096 & 128, 64, 64, 32, 32, 16 \\ \hline
+B & $16\times16$ & 22 & 23,668 & 40.11M & 307.3 s & 0.7444 & 128, 64, 64, 32, 32, 16 \\ \hline
+C & $14\times14$ & 24 & 23,924 & 37.19M & 242.9 s & 0.7455 & 124, 62, 60, 30, 28, 14 \\ \hline
+D & $8\times8$ & 43 & 23,924 & 11.08M & 131.7 s & 0.7429 & 64, 32, 32, 16, 16, 8 \\ \hline
+E & $13\times13$ & 26 & 24,308 & 41.15M & 250.4 s & 0.7566 & 122, 61, 59, 29, 27, 13 \\ \hline
+F & $64\times64$ & 11 & 23,668 & 94.96M & 235.2 s & 0.7283 & 64, 64, 64 \\ \hline
+\end{tabular}
+\end{center}
+
+\figwide{fig_combined_comparison.png}{Combined configurations A to F: test accuracy and computation.}{fig:combined}
+\FloatBarrier
+
+\begin{tcolorbox}[colback=lightblue!40, colframe=myColorB, title={\textbf{12.1 --- Question}}, fonttitle=\small\bfseries, breakable]
+Do the effects of kernel size, stride, padding, and pooling appear to be
+\emph{independent}, or do you see evidence of interaction (i.e.\ the effect of one
+parameter changes depending on another)? Use specific rows from your table (e.g.\
+Config~C versus Config~E) to support your answer, and discuss the trade-off between
+spatial resolution, receptive field, computational cost, and accuracy.
+\end{tcolorbox}
+
+\begin{answerbox}
+The results suggest that the settings interact, but this six-row sweep is not a full factorial design, so it
+is a hint and not proof. Changing only max to average pooling (A to B) raised accuracy from $0.7096$ to
+$0.7444$ ($+0.0348$), but in Section 11 the $2\times2$ gap was only $+0.0137$ and $3\times3$ pooling reversed it, so the
+pooling effect depends on the other settings. Config C ($5\times5$, valid, max, $0.7455$) vs.\ Config E ($7\times7$,
+valid, max, $0.7566$) is $+0.0111$, while with same padding in Section 8 the same kernel step gave only
+$+0.0030$. Config D has an $8\times8$ final map, receptive field 43 and 11.08M conv MACs, and scored $0.7429$,
+almost the same as Config B ($0.7444$, 40.11M MACs). Config F keeps a $64\times64$ final map and uses the most
+compute (94.96M MACs) but scored only $0.7283$. The best accuracy was Config E at a medium cost (41.15M MACs).
+No configuration was best in everything: more resolution costs compute, and more downsampling gives a larger
+receptive field and lower cost but a smaller final map.
+\end{answerbox}
+
+\section{Mathematical Verification Summary}
+
+Consolidate, in your report, the following calculations (most of which you already
+performed in earlier sections --- reference them rather than redoing the work):
+
+\begin{enumerate}[leftmargin=*, label=\arabic*.]
+  \item Convolution output dimensions for every configuration tested (Sections~4, 8, 9, 10).
+  \item Number of convolutional parameters for each kernel size tested (Section~8).
+  \item Receptive field dimensions for 1 and 2 stacked layers (Section~4) and for the
+        full depth of your base architecture.
+  \item Pooling output dimensions for each pooling configuration (Section~11).
+  \item The flattened feature dimension entering your first fully-connected layer,
+        for at least one architecture.
+  \item Total trainable parameters for each of the six architectures (Section~5).
+  \item The numeric loss value, computed by hand, for one specific prediction under
+        at least two of the four loss functions from Section~6.
+  \item The update rule for at least two of the five optimizers tested in Section~7,
+        identifying which require additional per-parameter state (e.g.\ first- and
+        second-moment estimates) beyond the raw gradient, and which do not.
+  \item A written explanation of how gradients propagate differently through max
+        pooling versus average pooling (Section~11).
+\end{enumerate}
+
+\subsection*{13.1 Output dimensions of every tested configuration}
+
+Every size below was computed with $\lfloor (n+2P-k)/s\rfloor+1$ and matched the PyTorch output in all 15 configurations checked.
+Each list shows the size after every convolution and pooling layer of the base network
+(base input $128\times128$).
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}\footnotesize
+\begin{tabular}{|p{8.2cm}|p{6.4cm}|}
+\hline
+\textbf{Configuration} & \textbf{Dimensions} \\ \hline
+Kernels $1,3,5,7$ (same padding); MaxPool, AvgPool, GAP $2\times2$; Config A, B & 128, 64, 64, 32, 32, 16 \\ \hline
+MaxPool, AvgPool $3\times3$/2 & 128, 63, 63, 31, 31, 15 \\ \hline
+Config C ($5\times5$, valid) & 124, 62, 60, 30, 28, 14 \\ \hline
+Config D ($5\times5$, stride 2) & 64, 32, 32, 16, 16, 8 \\ \hline
+Config E ($7\times7$, valid) & 122, 61, 59, 29, 27, 13 \\ \hline
+Config F (stride 2, no pooling) & 64, 64, 64 \\ \hline
+Stride 1, 2, 3 (first layer) & 128, 64, 43 \\ \hline
+Valid / same padding (Section 10) & 126, 63, 61, 30, 28, 14 / 128, 64, 64, 32, 32, 16 \\ \hline
+Section 4 patch ($6\times6$, $3\times3$ kernel) & $\lfloor (6+0-3)/1\rfloor+1=4$ \\ \hline
+\end{tabular}
+\end{center}
+
+\subsection*{13.2 Convolution parameters for each kernel size}
+
+The first layer has one input channel and 16 output channels, so it has $k^2\cdot1\cdot16$ weights.
+BatchNorm adds $2\cdot16=32$ parameters.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}\footnotesize
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Kernel} & \textbf{First-layer weights} & \textbf{BatchNorm} & \textbf{Whole network} \\ \hline
+$1\times1$ & 16 & 32 & 23,540 \\ \hline
+$3\times3$ & 144 & 32 & 23,668 \\ \hline
+$5\times5$ & 400 & 32 & 23,924 \\ \hline
+$7\times7$ & 784 & 32 & 24,308 \\ \hline
+\end{tabular}
+\end{center}
+
+\subsection*{13.3 Receptive fields}
+
+One $3\times3$ layer has $\text{RF}=3$. Two stacked stride-1 layers have $3+(3-1)\cdot1=5$.
+For the full depth of the base network (three convolutions with pooling in between),
+the receptive field is $22\times22$. For the combined configurations it is
+A 22, B 22, C 24, D 43, E 26, and F 11.
+
+\subsection*{13.4 Pooling output dimensions}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}\footnotesize
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Input} & \textbf{Pool / stride} & \textbf{$\lfloor (n-k)/s\rfloor+1$} & \textbf{PyTorch} \\ \hline
+128 & 2 / 2 & 64 & 64 \\ \hline
+128 & 3 / 2 & 63 & 63 \\ \hline
+126 & 2 / 2 & 63 & 63 \\ \hline
+126 & 3 / 2 & 62 & 62 \\ \hline
+128 & global & 1 & $1\times1$ \\ \hline
+\end{tabular}
+\end{center}
+
+\subsection*{13.5 Flattened feature dimension before the first fully connected layer}
+
+For LeNet-5 by hand: $128\to124$ (first $5\times5$ convolution) $\to62$ (average pooling)
+$\to58$ (second $5\times5$ convolution) $\to29$ (average pooling). With 16 channels,
+$16\cdot29\cdot29=13{,}456$ features, which matches the model. The same value for every architecture:
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}\footnotesize
+\begin{tabular}{|l|c|c|c|c|c|c|}
+\hline
+\textbf{Architecture} & LeNet-5 & AlexNet & VGG & GoogLeNet & ResNet & EfficientNet \\ \hline
+\textbf{Features into classifier} & 13,456 & 2,304 & 1,024 & 224 & 256 & 320 \\ \hline
+\end{tabular}
+\end{center}
+
+\subsection*{13.6 Total trainable parameters}
+
+LeNet-5 1,627,916; AlexNet 5,869,380; VGG 2,833,892; GoogLeNet 165,476; ResNet 2,796,772;
+EfficientNet 606,276 (Section~5 table).
+
+\subsection*{13.7 Loss values computed by hand for one prediction}
+
+The logits are $z=(2.0,\,0.5,\,-1.0,\,0.0)$ and the true class is Meningioma (index 1).
+The softmax is $(0.7101,\,0.1584,\,0.0354,\,0.0961)$, so $p_y=0.1584$.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.3}\footnotesize
+\begin{tabular}{|l|l|c|}
+\hline
+\textbf{Loss} & \textbf{Calculation} & \textbf{Value} \\ \hline
+Cross-entropy & $-\ln(0.1584)$ & 1.842350 \\ \hline
+Label smoothing ($\varepsilon=0.1$) & $0.9(1.8423)+0.1\cdot\text{mean}(-\ln p_c)$ & 1.854850 \\ \hline
+Focal ($\gamma=2$, $\alpha_y=1.1194$) & $-1.1194\,(1-0.1584)^2\ln(0.1584)$ & 1.460525 \\ \hline
+Weighted CE (before batch reduction) & $1.1194\times1.8423$ & 2.062262 \\ \hline
+\end{tabular}
+\end{center}
+
+The first three values matched the PyTorch loss functions. PyTorch's weighted CE for a single sample is
+1.842350 because the weight cancels in the weighted mean.
+
+\subsection*{13.8 Optimizer update rules and per-parameter state}
+
+\textbf{SGD with Nesterov momentum:} $v_t=\mu v_{t-1}+g_t,\quad \theta_{t+1}=\theta_t-\eta\,(g_t+\mu v_t)$.\\
+\textbf{Adam:} $m_t=\beta_1 m_{t-1}+(1-\beta_1)g_t,\quad v_t=\beta_2 v_{t-1}+(1-\beta_2)g_t^2,\quad
+\theta_{t+1}=\theta_t-\eta\,\dfrac{\hat m_t}{\sqrt{\hat v_t}+\epsilon}$, where
+$\hat m_t=m_t/(1-\beta_1^t)$ and $\hat v_t=v_t/(1-\beta_2^t)$.
+
+For gradients $(0.5,-0.2,0.3)$, $\theta_0=1$, and $\eta=0.01$, the manual updates gave
+0.9905, 0.99025, and 0.982525 for SGD-Nesterov
+and 0.99, 0.98654, and 0.98110 for Adam. Both matched \texttt{torch.optim} exactly.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}\footnotesize
+\begin{tabular}{|l|c|l|}
+\hline
+\textbf{Optimizer} & \textbf{State tensors} & \textbf{State names} \\ \hline
+SGD (no momentum) & 0 & none (only the raw gradient) \\ \hline
+SGD with momentum & 1 & momentum buffer \\ \hline
+RMSprop & 1 & square\_avg \\ \hline
+Adam, AdamW, Nadam & 2 & exp\_avg, exp\_avg\_sq \\ \hline
+\end{tabular}
+\end{center}
+
+\subsection*{13.9 Gradient flow through max pooling versus average pooling}
+
+\figwide{fig_pooling_gradient_flow.png}{Gradient with respect to the input for a $4\times4$ example with an upstream gradient of 1.}{fig:gradflow}
+
+Max pooling sends the whole gradient to the one position that held the maximum, and the other three
+positions in each window get 0. Average pooling splits the gradient equally, so every position in a
+$2\times2$ window gets $0.25$. Pooling layers have no trainable parameters because they apply a fixed rule
+(maximum or mean) with no weights to learn.
+\FloatBarrier
+
+\section{Visualization Requirements --- Checklist}
+
+Your notebook and report must include all of the following, each with a title, axis
+labels, and (where applicable) a legend:
+
+\begin{itemize}[leftmargin=*]
+  \item Original input images for all four classes (Section~1).
+  \item Per-class data augmentation figures --- 4 total (Section~3).
+  \item Per-class convolution calculation figures --- 4 total, each showing patch,
+        kernel, manual feature map, and PyTorch-verified feature map (Section~4).
+  \item Intermediate convolutional feature maps for the kernel-size experiment (Section~8).
+  \item Feature maps before and after padding, for both padding schemes (Section~10).
+  \item Feature maps before and after max pooling and average pooling (Section~11).
+  \item Training-vs-validation loss curves and accuracy curves for every architecture (Section~5).
+  \item Confusion matrices for every architecture (Section~5).
+  \item Architecture comparison chart (Section~5), loss-function comparison
+        chart (Section~6), and optimizer comparison chart (Section~7).
+  \item Kernel-size, stride, and padding comparison charts (Sections~8--10).
+\end{itemize}
+
+\section{Implementation and Code Organization Requirements}
+
+\begin{stepbox}
+Organize your source code into the following reusable modules rather than one script:
+\end{stepbox}
+
+\begin{lstlisting}[style=pythonstyle]
+project/
+    dataset.py      # ImageFolder loading, stratified split, augmentation pipeline
+    models.py       # LeNet5, AlexNet, VGG, GoogLeNet, ResNet, EfficientNet classes
+    losses.py       # CrossEntropy, LabelSmoothingCE, FocalLoss, WeightedCE
+    train.py         # training/validation loop, optimizer factory, checkpointing
+    evaluate.py     # test-set evaluation, confusion matrix, classification report
+    experiments.py  # kernel/stride/padding/pooling sweep configurations
+    visualize.py    # feature map, augmentation, and curve plotting utilities
+    main.py          # orchestrates everything via configuration dictionaries
+\end{lstlisting}
+
+Every convolutional, pooling, and loss configuration must be changeable through a
+configuration dictionary or function arguments, \textbf{without} rewriting the model
+class. Include model checkpointing (save the best validation-accuracy weights per
+architecture) and basic experiment logging (a CSV or dictionary of every run's
+settings and results).
+
+\begin{notebox}
+\textbf{Code organization:} the project folder contains the eight modules listed above, plus \texttt{config.py}
+(settings, seed, paths) and \texttt{math\_checks.py} (hand calculations checked against PyTorch).
+\texttt{main.py} runs any experiment from one command, for example \texttt{python main.py --stage loss}.
+Every convolution, pooling, and loss setting is changed through a configuration dictionary or function arguments
+(\texttt{flex\_cfg}, \texttt{make\_spec}), so no model class has to be rewritten. Each run saves its
+best-validation weights in \texttt{checkpoints/}, its results in \texttt{runs/}, and a row in
+\texttt{experiment\_log.csv}. Every run uses \texttt{SEED = 42}, batch size 32, a maximum of 30 epochs, and
+patience 6. The modules contain the same code as the notebook and produce the same run identifiers, so the
+finished runs are reused and not trained again.
+\end{notebox}
+
+\section*{Technical Report}
+
+\textbf{Objective and setup.} The goal was to classify brain MRI images into four classes (Glioma, Meningioma,
+Pituitary Tumor, No Tumor) and to measure how architecture, loss function, optimizer, kernel size, stride,
+padding, and pooling affect performance. All 13,196 images were converted to $128\times128$ grayscale, split
+70/15/15 with a stratified split, and normalized with training-split statistics. Every model was trained from
+scratch on a GTX 1080 with batch size 32, a maximum of 30 epochs, early stopping on validation loss (patience 6),
+and \texttt{SEED = 42}. Sections 5 to 7 compare six architectures. Sections 8 to 12 use one small CNN with 23,668
+parameters, so their accuracies (0.70 to 0.80) are not comparable with the six architectures (0.83 to 0.84).
+
+\textbf{Main results.}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}\footnotesize
+\begin{tabularx}{\textwidth}{|l|X|c|}
+\hline
+\textbf{Experiment} & \textbf{Best observed result} & \textbf{Test Acc} \\ \hline
+Architectures (CE, Adam) & EfficientNet & 0.8369 \\ \hline
+Loss functions & VGG with label smoothing & 0.8389 \\ \hline
+Optimizers (CE) & VGG with SGD (Nesterov) & 0.8424 \\ \hline
+Kernel size & $7\times7$ first layer & 0.7328 \\ \hline
+Stride & Stride 2 (about 25\% of the conv positions) & 0.7631 \\ \hline
+Padding & Valid & 0.7177 \\ \hline
+Pooling & MaxPool $3\times3$/2 (secondary); AvgPool $2\times2$ is the best primary setting (0.7975) & 0.8000 \\ \hline
+Combined & Config E ($7\times7$, stride 1, valid, max) & 0.7566 \\ \hline
+\end{tabularx}
+\end{center}
+
+\textbf{Discussion.} Observed: the five larger architectures finished within 0.4 percentage points of each other
+under the base setting (0.8328 to 0.8369), while LeNet-5 was clearly lower (0.7374). A test set of 1,980 images has
+a sampling error of about 0.8 percentage points at 84\% accuracy, so the differences among the five larger models are
+within noise. Class-wise, No Tumor was almost perfect (recall 0.99 to 1.00), Pituitary Tumor reached 0.93 to 0.95,
+and Meningioma was the hardest class (recall 0.68 to 0.72, except LeNet-5 at 0.35), followed by Glioma
+(0.71 to 0.76). No optimizer or loss function won across all architectures. SGD improved LeNet-5 the most
+($0.7374\to0.7879$). Focal loss lowered accuracy for every architecture, and inverse-frequency weighting did not
+raise Meningioma recall for ResNet. A stride of 2 cut the convolution cost to a quarter and still scored higher
+than stride 1 (0.7631 vs.\ 0.7096). Expected from theory but not confirmed: SGD was not consistently slower than the
+Adam family, and max pooling did not beat average pooling at $2\times2$ (0.7838 vs.\ 0.7975).
+
+\textbf{Limitations.} Every result comes from a single seed, so differences below about one percentage point should
+not be treated as real. The pooling comparison changes the classifier head together with the pooling type
+(Section~11), and the VGG + Nadam training time is an outlier. An accuracy near 84\% is not good enough for
+clinical use.
+
+\textbf{Conclusion.} The best single result in the six-architecture comparison was VGG with SGD (Nesterov) at
+0.8424. GoogLeNet gave almost the same accuracy (0.8328 with Adam, 0.8399 with SGD) with only 165,476 parameters,
+which makes it the smallest model.
+
+\section*{Executive Summary}
+
+\begin{itemize}[leftmargin=*]
+  \item Six CNN architectures classified four brain MRI classes with 0.74 to 0.84 test accuracy, and every run
+        used the same split, preprocessing, and seed.
+  \item The most effective configuration was VGG with cross-entropy and SGD (Nesterov), at 0.8424 test accuracy.
+        The smallest was GoogLeNet, with 165,476 parameters and 0.8328 to 0.8399 accuracy.
+  \item The top five architectures differ by less than the sampling error of the test set, so none can be called
+        clearly better.
+  \item Meningioma and Glioma are the hardest classes; No Tumor and Pituitary Tumor are easy.
+  \item For the five larger architectures, loss function and optimizer choices moved test accuracy by about 1 to 2
+        points. The largest changes were LeNet-5 with SGD (+0.0505 over Adam), AlexNet with focal loss
+        ($-0.0883$ versus CE), and AlexNet with RMSprop ($-0.0378$ versus Adam).
+  \item In the stride experiment, stride 2 had the best accuracy (0.7631) with a quarter of the convolution positions.
+  \item These are single-seed results, so they show what happened in these runs and do not prove general rules.
+\end{itemize}
+
+\section*{Submission Checklist}
+
+Before submitting, verify that you have:
+
+\begin{itemize}[leftmargin=2em, label=$\square$]
+  \item Completed all coding cells in your own notebook, following the given instructions.
+  \item Produced the \textbf{4 per-class data augmentation figures} (Section~3).
+  \item Produced the \textbf{4 per-class convolution calculation figures}, with manual
+        values matching PyTorch output (Section~4).
+  \item Filled in every results table in Sections~5--12 with your actual values.
+  \item Answered every numbered discussion question (Sections~1--12) in this activity sheet.
+  \item Attached or embedded all required figures (Section~14).
+  \item Organized your code according to Section~15 and included model checkpoints for
+        at least your best-performing architecture per experiment.
+  \item Written a concise technical report and an executive summary identifying the
+        most effective configuration(s), clearly distinguishing observed results from
+        theoretical expectations.
+  \item Submitted (a) this completed activity sheet, (b) your \texttt{.ipynb} notebook
+        and supporting \texttt{.py} modules, and (c) your technical report.
+\end{itemize}
+
+\section*{Grading Rubric}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{|p{10cm}|c|}
+\hline
+\textbf{Assessment Component} & \textbf{Weight} \\
+\hline
+CNN architecture implementation and comparison\newline (Section~5) & 15 \\
+\hline
+Loss function implementation and comparison\newline  (Section~6) & 10 \\
+\hline
+Optimizer implementation and comparison\newline  (Section~7) & 10 \\
+\hline
+Kernel size, stride, and padding experiments\newline  (Sections~8--10) & 12 \\
+\hline
+Max pooling, average pooling, and GAP experiments\newline  (Section~11) & 8 \\
+\hline
+Combined hyperparameter experiments\newline  (Section~12) & 5 \\
+\hline
+Per-class data augmentation demonstration \newline (Section~3) & 5 \\
+\hline
+Per-class convolution calculation \& verification \newline (Section~4) & 8 \\
+\hline
+Mathematical verification summary \newline (Section~13) & 8 \\
+\hline
+Visualization and experimental analysis \newline (Section~14) & 9 \\
+\hline
+Code quality, reproducibility, and documentation \newline (Section~15) & 5 \\
+\hline
+Technical report and interpretation & 5 \\
+\hline
+\textbf{Total} & \textbf{100} \\
+\hline
+\end{tabular}
+\end{center}
+
+\end{document}
